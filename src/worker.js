@@ -29,7 +29,7 @@ async function startHost(port, pKey) {
       pKey
     };
     const result = await userRegistration(regData);
-    console.log(result);
+    res.setHeader('Access-Control-Allow-Origin', '*');
     if (result) {
       moneySender.sendMoneyToUser(name);
       res.send(JSON.stringify({

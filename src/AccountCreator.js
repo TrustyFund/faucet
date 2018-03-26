@@ -2,9 +2,7 @@ const { TransactionBuilder } = require('bitsharesjs');
 const { key } = require('bitsharesjs');
 
 async function userRegistration(regData) {
-  const { brainkey, name, registarUserId, referrerUserId, referrerPercent, pKey } = regData;
-  const activeKey = key.get_brainPrivateKey(brainkey, 1).toPublicKey();
-  const ownerKey = key.get_brainPrivateKey(brainkey, 0).toPublicKey();
+  const { name, activeKey, ownerKey, registarUserId, referrerUserId, referrerPercent, pKey } = regData;
   const memoKey = activeKey;
 
   const transaction = new TransactionBuilder();

@@ -1,4 +1,3 @@
-const { suggestBrainkey } = require('./utils');
 const config = require('../config');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -16,11 +15,11 @@ async function startHost(port, pKey) {
   host.use(bodyParser.urlencoded({ extended: true }));
 
   host.post('/signup', async (req, res) => {
-    const { name, password, email } = req.body;
-    const brainkey = suggestBrainkey(config.brainkeyDictionary.en);
+    const { name, active_key, owner_key } = req.body;
     const regData = {
-      brainkey,
       name,
+      activeKey: active_key,
+      ownerKey: owner_key,
       registarUserId: config.registarUserId,
       referrerUserId: config.referrerUserId,
       referrerPercent: config.referrerPercent,
@@ -31,7 +30,6 @@ async function startHost(port, pKey) {
     if (result) {
       res.send(JSON.stringify({
         result: 'OK',
-        brainkey,
         name
       }));
     } else {

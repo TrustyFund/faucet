@@ -1,5 +1,4 @@
 const { TransactionBuilder } = require('bitsharesjs');
-const { key } = require('bitsharesjs');
 
 async function userRegistration(regData) {
   const { name, activeKey, ownerKey, registarUserId, referrerUserId, referrerPercent, pKey } = regData;

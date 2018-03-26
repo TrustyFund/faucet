@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { userRegistration } = require('./AccountCreator');
 const { key } = require('bitsharesjs');
+const MoneySender = require('./MoneySender');
 
 function getPrivateKey(brainkey) {
   const normalizedBrainkey = key.normalize_brainKey(brainkey);
@@ -11,6 +12,8 @@ function getPrivateKey(brainkey) {
 }
 
 async function startHost(port, pKey) {
+  const moneySender = new MoneySender(config.defaultAmountToSend, pKey, config.serviceUserMemoKey, config.registarUserId); 
+
   const host = express();
   host.use(bodyParser.urlencoded({ extended: true }));
 
@@ -28,6 +31,7 @@ async function startHost(port, pKey) {
     const result = await userRegistration(regData);
     console.log(result);
     if (result) {
+      moneySender.sendMoneyToUser(name);
       res.send(JSON.stringify({
         result: 'OK',
         name

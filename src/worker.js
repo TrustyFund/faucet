@@ -1,9 +1,9 @@
-const { suggestBrainkey } = require('./utils');
 const config = require('../config');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { userRegistration } = require('./AccountCreator');
 const { key } = require('bitsharesjs');
+const MoneySender = require('./MoneySender');
 
 function getPrivateKey(brainkey) {
   const normalizedBrainkey = key.normalize_brainKey(brainkey);
@@ -12,15 +12,17 @@ function getPrivateKey(brainkey) {
 }
 
 async function startHost(port, pKey) {
+  const moneySender = new MoneySender(config.defaultAmountToSend, pKey, config.serviceUserMemoKey, config.registarUserId); 
+
   const host = express();
   host.use(bodyParser.urlencoded({ extended: true }));
 
   host.post('/signup', async (req, res) => {
-    const { name, password, email } = req.body;
-    const brainkey = suggestBrainkey(config.brainkeyDictionary.en);
+    const { name, active_key, owner_key } = req.body;
     const regData = {
-      brainkey,
       name,
+      activeKey: active_key,
+      ownerKey: owner_key,
       registarUserId: config.registarUserId,
       referrerUserId: config.referrerUserId,
       referrerPercent: config.referrerPercent,
@@ -29,9 +31,9 @@ async function startHost(port, pKey) {
     const result = await userRegistration(regData);
     console.log(result);
     if (result) {
+      moneySender.sendMoneyToUser(name);
       res.send(JSON.stringify({
         result: 'OK',
-        brainkey,
         name
       }));
     } else {

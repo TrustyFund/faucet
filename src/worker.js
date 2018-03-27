@@ -78,7 +78,7 @@ async function startHost(port, pKey) {
         res.status(400);
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.send(JSON.stringify({
-          result: 'You cannot register a user more than once every '+
+          result: 'You cannot register a user more than once every ' +
             `${config.registrationDelayInMinutes} minutes`
         }));
         return;

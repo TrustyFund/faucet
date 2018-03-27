@@ -12,7 +12,7 @@ function getPrivateKey(brainkey) {
   return pKey;
 }
 
-let ipTime = {};
+const ipTime = {};
 
 function clearAddressesTimeout() {
   const now = Date.now();

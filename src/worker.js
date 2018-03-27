@@ -100,6 +100,7 @@ async function startHost(port, pKey) {
 
     if (!isNameValid(name)) {
       res.status(400);
+      res.setHeader('Access-Control-Allow-Origin', '*');
       res.send(JSON.stringify({
         result: 'Name is not valid'
       }));
@@ -108,6 +109,7 @@ async function startHost(port, pKey) {
 
     if (!isCheapName(name)) {
       res.status(400);
+      res.setHeader('Access-Control-Allow-Origin', '*');
       res.send(JSON.stringify({
         result: 'Only cheap names is allowed'
       }));
@@ -116,6 +118,7 @@ async function startHost(port, pKey) {
 
     if (ipTime.some(x => x.ip === req.remoteAddress)) {
       res.status(400);
+      res.setHeader('Access-Control-Allow-Origin', '*');
       res.send(JSON.stringify({
         result: 'You cannot register a user more than once every five minutes'
       }));

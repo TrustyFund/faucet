@@ -11,6 +11,8 @@ function getPrivateKey(brainkey) {
   return pKey;
 }
 
+let ipTime = {};
+
 function isSymbolIsLetter(symbol) {
   if (!(symbol >= 'a' && symbol <= 'z')) return false;
   return true;
@@ -69,8 +71,19 @@ function isCheapName(name) {
   return false;
 }
 
+function clearAddressesTimeout() {
+  const now = Date.now();
+  const keys = Object.keys(ipTime);
+  keys.forEach(addr => {
+    if (ipTime[addr] < (now - (config.registrationDelayInMinutes * 60 * 1000))) {
+      delete ipTime[addr];
+    }
+  });
+}
+
 async function startHost(port, pKey) {
-  const ipTime = [];
+  setInterval(clearAddressesTimeout, config.clearRegisrationInMinutes * 60 * 1000);
+
   const moneySender = new MoneySender(config.defaultAmountToSend, pKey, config.serviceUserMemoKey, config.registarUserId); 
 
   const host = express();
@@ -116,13 +129,17 @@ async function startHost(port, pKey) {
       return;
     }
 
-    if (ipTime.some(x => x.ip === req.remoteAddress)) {
-      res.status(400);
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.send(JSON.stringify({
-        result: 'You cannot register a user more than once every five minutes'
-      }));
-      return;
+    if (ipTime[req.connection.remoteAddress]) {
+      if (ipTime[req.connection.remoteAddress] >
+          Date.now() - (config.registrationDelayInMinutes * 60 * 1000)) {
+        res.status(400);
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.send(JSON.stringify({
+          result: 'You cannot register a user more than once every '+
+            `${config.registrationDelayInMinutes} minutes`
+        }));
+        return;
+      }
     }
     const regData = {
       name,
@@ -138,6 +155,7 @@ async function startHost(port, pKey) {
       res.setHeader('Access-Control-Allow-Origin', '*');
       if (result) {
         moneySender.sendMoneyToUser(name);
+        ipTime[req.connection.remoteAddress] = Date.now();
         res.send(JSON.stringify({
           result: 'OK',
           name

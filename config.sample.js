@@ -31,6 +31,10 @@ module.exports = {
   defaultAmountToSend: {
     amount: 0,
     assetId: '1.3.0'
-  }
+  },
+  minNameLength: 3,
+  maxNameLength: 60,
+  registrationDelayInMinutes: 5,
+  clearRegisrationInMinutes: 10
 };
 

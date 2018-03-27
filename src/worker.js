@@ -19,6 +19,15 @@ async function startHost(port, pKey) {
 
   host.post('/signup', async (req, res) => {
     const { name, active_key, owner_key } = req.body;
+
+    if (!name || !active_key || !owner_key) {
+      res.status(400);
+      res.send(JSON.stringify({
+        result: 'Both name, active_key, owner_key must be in request'
+      }));
+      return;
+    }
+
     const regData = {
       name,
       activeKey: active_key,
@@ -37,6 +46,7 @@ async function startHost(port, pKey) {
         name
       }));
     } else {
+      res.status(400);
       res.send(JSON.stringify({
         result: 'ERROR'
       }));

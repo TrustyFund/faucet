@@ -1,8 +1,9 @@
 /* eslint max-len: ["error", { "ignoreStrings": true }] */
 module.exports = {
-  registarUserId: '',
   referrerUserId: '',
-  referrerPercent: 0,
+  registarUserId: '',
+  serviceUserMemoKey: '',
+  referrerPercent: 5000,
   serviceUserBrainkey: '',
   bitsharesNodes: [
     'wss://bitshares.openledger.info/ws',
@@ -26,8 +27,10 @@ module.exports = {
     'wss://sg.nodes.bitshares.ws',
     'wss://ws.winex.pro'
   ],
-  brainkeyDictionary: {
-  },
-  defaultPort: 3000
+  defaultPort: 80,
+  defaultAmountToSend: {
+    amount: 0,
+    assetId: '1.3.0'
+  }
 };
 

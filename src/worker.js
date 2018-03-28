@@ -5,6 +5,7 @@ const { userRegistration } = require('./AccountCreator');
 const { key } = require('bitsharesjs');
 const MoneySender = require('./MoneySender');
 const { isNameValid, isCheapName } = require('./NameValidator');
+const { Apis } = require('bitsharesjs-ws');
 
 function getPrivateKey(brainkey) {
   const normalizedBrainkey = key.normalize_brainKey(brainkey);
@@ -27,14 +28,12 @@ function clearAddressesTimeout() {
 async function startHost(port, pKey) {
   setInterval(clearAddressesTimeout, config.clearRegisrationInMinutes * 60 * 1000);
 
-  const moneySender = new MoneySender(config.defaultAmountToSend, pKey, config.serviceUserMemoKey, config.registarUserId); 
+  const moneySender = new MoneySender(config.defaultAmountToSend, pKey, config.serviceUserMemoKey, config.registarUserId);
 
   const host = express();
   host.use(bodyParser.urlencoded({ extended: true }));
 
   host.post('/signup', async (req, res) => {
-    console.log(req.connection.remoteAddress);
-
     const { name, active_key, owner_key } = req.body;
 
     if (!name || !active_key || !owner_key) {
@@ -68,6 +67,16 @@ async function startHost(port, pKey) {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.send(JSON.stringify({
         result: 'Only cheap names is allowed'
+      }));
+      return;
+    }
+
+    const userCheck = await Apis.instance().db_api().exec('get_full_accounts', [[name], false]);
+    if (userCheck && userCheck[0]) {
+      res.status(400);
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.send(JSON.stringify({
+        result: 'This name is already registered'
       }));
       return;
     }

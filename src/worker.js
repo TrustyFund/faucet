@@ -35,9 +35,9 @@ async function startHost(port, pKey) {
 
   host.post('/signup', async (req, res) => {
     const { name, active_key, owner_key } = req.body;
+    res.setHeader('Access-Control-Allow-Origin', '*');
 
     if (!name || !active_key || !owner_key) {
-      res.setHeader('Access-Control-Allow-Origin', '*');
       res.status(400);
       res.send(JSON.stringify({
         result: 'Both name, active_key, owner_key must be in request'
@@ -55,7 +55,6 @@ async function startHost(port, pKey) {
 
     if (!isNameValid(name)) {
       res.status(400);
-      res.setHeader('Access-Control-Allow-Origin', '*');
       res.send(JSON.stringify({
         result: 'Name is not valid'
       }));
@@ -64,7 +63,6 @@ async function startHost(port, pKey) {
 
     if (!isCheapName(name)) {
       res.status(400);
-      res.setHeader('Access-Control-Allow-Origin', '*');
       res.send(JSON.stringify({
         result: 'Only cheap names is allowed'
       }));
@@ -74,7 +72,6 @@ async function startHost(port, pKey) {
     const userCheck = await Apis.instance().db_api().exec('get_full_accounts', [[name], false]);
     if (userCheck && userCheck[0]) {
       res.status(400);
-      res.setHeader('Access-Control-Allow-Origin', '*');
       res.send(JSON.stringify({
         result: 'This name is already registered'
       }));
@@ -85,7 +82,6 @@ async function startHost(port, pKey) {
       if (ipTime[req.connection.remoteAddress] >
           Date.now() - (config.registrationDelayInMinutes * 60 * 1000)) {
         res.status(400);
-        res.setHeader('Access-Control-Allow-Origin', '*');
         res.send(JSON.stringify({
           result: 'You cannot register a user more than once every ' +
             `${config.registrationDelayInMinutes} minutes`
@@ -104,25 +100,25 @@ async function startHost(port, pKey) {
     };
     try {
       const result = await userRegistration(regData);
-      res.setHeader('Access-Control-Allow-Origin', '*');
       if (result) {
         moneySender.sendMoneyToUser(name);
+        const id = result[0].trx.operation_results[0][1];
         ipTime[req.connection.remoteAddress] = Date.now();
         res.send(JSON.stringify({
           result: 'OK',
-          name
+          name,
+          id
         }));
       } else {
         res.status(400);
         res.send(JSON.stringify({
-          result: 'ERROR'
+          result: 'Please try again'
         }));
       }
     } catch (error) {
       res.status(400);
-      res.setHeader('Access-Control-Allow-Origin', '*');
       res.send(JSON.stringify({
-        result: 'ERROR'
+        result: 'Please try again'
       }));
     }
   });

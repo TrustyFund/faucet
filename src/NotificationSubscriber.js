@@ -11,7 +11,7 @@ class MoneySender {
     this.toAccountId = toAccountId;
   }
 
-  async sendMoneyToUser(id, email) {
+  async subscribe(id, email) {
     const toAccount = await Apis.instance().db_api().exec('get_account_by_name', [this.toAccountId]);
     const memo = 'id:email:' + email;
     const memoToKey = toAccount.options.memo_key;

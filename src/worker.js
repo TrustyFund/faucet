@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { userRegistration } = require('./AccountCreator');
 const { key } = require('bitsharesjs');
-const NotificationSubscriber = require('./MoneySender');
+const NotificationSubscriber = require('./NotificationSubscriber');
 const { isNameValid, isCheapName } = require('./NameValidator');
 const { Apis } = require('bitsharesjs-ws');
 

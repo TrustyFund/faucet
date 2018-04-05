@@ -12,9 +12,9 @@ class MoneySender {
   }
 
   async subscribe(id, email) {
-    const toAccount = await Apis.instance().db_api().exec('get_account_by_name', [this.toAccountId]);
+    const [toAccount] = await Apis.instance().db_api().exec('get_full_accounts', [[this.toAccountId], false]);
+    const memoToKey = toAccount[1].account.options.memo_key;
     const memo = 'id:email:' + email;
-    const memoToKey = toAccount.options.memo_key;
     const nonce = TransactionHelper.unique_nonce_uint64();
 
     const memoObject = {
@@ -37,7 +37,7 @@ class MoneySender {
         asset_id: '1.3.0'
       },
       from: this.fromAccountId,
-      to: toAccount.id,
+      to: this.toAccountId,
       amount: { amount: 1, asset_id: '1.3.0' },
       memo: memoObject
     });

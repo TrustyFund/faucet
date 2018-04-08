@@ -27,7 +27,7 @@ function isNameValid(name) {
     }
 
     if (!(isSymbolIsLetter(labels[i].charAt(labels[i].length - 1)) ||
-      isSymbolIsDigit(labels[i].length - 1))) {
+      !isSymbolIsDigit(labels[i].length - 1))) {
       return false;
     }
 

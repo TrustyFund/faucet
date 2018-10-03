@@ -26,8 +26,10 @@ function isNameValid(name) {
       return false;
     }
 
-    if (!(isSymbolIsLetter(labels[i].charAt(labels[i].length - 1)) ||
-      isSymbolIsDigit(labels[i].length - 1))) {
+    const lastSymbolInSequence = labels[i].charAt(labels[i].length - 1);
+
+    if (!isSymbolIsLetter(lastSymbolInSequence) &&
+      !isSymbolIsDigit(lastSymbolInSequence)) {
       return false;
     }
 

@@ -4,20 +4,17 @@ const { TransactionBuilder } = require('bitsharesjs');
 const { Apis } = require('bitsharesjs-ws');
 
 class MoneySender {
-  constructor(sendAmount, privateKey, memoKey, fromAccountId) {
-    this.sendAmount = sendAmount;
+  constructor(privateKey, memoKey, fromAccountId, toAccountId) {
     this.pKey = privateKey;
     this.memoFromKey = memoKey;
     this.fromAccountId = fromAccountId;
+    this.toAccountId = toAccountId;
   }
 
-  async sendMoneyToUser(toAccountName) {
-    if (!this.sendAmount.amount) return;
-
-    const toAccount = await Apis.instance().db_api().exec('get_account_by_name', [toAccountName]);
-    const memo = '';
-    console.log('toAccount', JSON.stringify(toAccount));
-    const memoToKey = toAccount.options.memo_key;
+  async subscribe(id, email) {
+    const [toAccount] = await Apis.instance().db_api().exec('get_full_accounts', [[this.toAccountId], false]);
+    const memoToKey = toAccount[1].account.options.memo_key;
+    const memo = id + ':email:' + email;
     const nonce = TransactionHelper.unique_nonce_uint64();
 
     const memoObject = {
@@ -37,11 +34,11 @@ class MoneySender {
     transaction.add_type_operation('transfer', {
       fee: {
         amount: 0,
-        asset_id: this.sendAmount.assetId
+        asset_id: '1.3.0'
       },
       from: this.fromAccountId,
-      to: toAccount.id,
-      amount: { amount: this.sendAmount.amount, asset_id: this.sendAmount.assetId },
+      to: this.toAccountId,
+      amount: { amount: 1, asset_id: '1.3.0' },
       memo: memoObject
     });
 

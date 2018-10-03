@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { userRegistration } = require('./AccountCreator');
 const { key } = require('bitsharesjs');
-const MoneySender = require('./MoneySender');
+const NotificationSubscriber = require('./NotificationSubscriber');
 const { isNameValid, isCheapName } = require('./NameValidator');
 const { Apis } = require('bitsharesjs-ws');
 
@@ -28,13 +28,13 @@ function clearAddressesTimeout() {
 async function startHost(port, pKey) {
   setInterval(clearAddressesTimeout, config.clearRegisrationInMinutes * 60 * 1000);
 
-  const moneySender = new MoneySender(config.defaultAmountToSend, pKey, config.serviceUserMemoKey, config.registarUserId);
+  const subscriber = new NotificationSubscriber(pKey, config.serviceUserMemoKey, config.registarUserId, config.notiferUserId);
 
   const host = express();
   host.use(bodyParser.urlencoded({ extended: true }));
 
   host.post('/signup', async (req, res) => {
-    const { name, active_key, owner_key } = req.body;
+    const { name, active_key, owner_key, email } = req.body;
     res.setHeader('Access-Control-Allow-Origin', '*');
 
     if (!name || !active_key || !owner_key) {
@@ -101,8 +101,12 @@ async function startHost(port, pKey) {
     try {
       const result = await userRegistration(regData);
       if (result) {
-        moneySender.sendMoneyToUser(name);
         const id = result[0].trx.operation_results[0][1];
+
+        if (email) {
+          subscriber.subscribe(id, email);
+        }
+
         ipTime[req.connection.remoteAddress] = Date.now();
         res.send(JSON.stringify({
           result: 'OK',

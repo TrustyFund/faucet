@@ -2,6 +2,7 @@
 module.exports = {
   referrerUserId: '',
   registarUserId: '',
+  notiferUserId: '',
   serviceUserMemoKey: '',
   referrerPercent: 5000,
   serviceUserBrainkey: '',

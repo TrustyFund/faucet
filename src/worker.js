@@ -127,7 +127,8 @@ async function startHost(port, pKey) {
     }
   });
 
-  host.listen(port, () => {
+  host.listen(port, '0.0.0.0', () => {
+    console.log("... port %d in %s mode", port, host.settings.env);
     console.log('host is up');
   });
 }

@@ -2,6 +2,7 @@ const { TransactionHelper } = require('bitsharesjs');
 const { Aes } = require('bitsharesjs');
 const { TransactionBuilder } = require('bitsharesjs');
 const { Apis } = require('bitsharesjs-ws');
+const { delay } = require('./utils');
 
 class MoneySender {
   constructor(privateKey, memoKey, fromAccountId, toAccountId) {
@@ -12,8 +13,9 @@ class MoneySender {
   }
 
   async subscribe(id, email) {
-    const [toAccount] = await Apis.instance().db_api().exec('get_full_accounts', [[this.toAccountId], false]);
-    const memoToKey = toAccount[1].account.options.memo_key;
+    await delay(1000);
+    const [toAccount] = await Apis.instance().db_api().exec('get_accounts', [[this.toAccountId], false]);
+    const memoToKey = toAccount.options.memo_key;
     const memo = id + ':email:' + email;
     const nonce = TransactionHelper.unique_nonce_uint64();
 

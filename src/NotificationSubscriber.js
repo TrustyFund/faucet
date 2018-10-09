@@ -2,7 +2,6 @@ const { TransactionHelper } = require('bitsharesjs');
 const { Aes } = require('bitsharesjs');
 const { TransactionBuilder } = require('bitsharesjs');
 const { Apis } = require('bitsharesjs-ws');
-const { delay } = require('./utils');
 
 class MoneySender {
   constructor(privateKey, memoKey, fromAccountId, toAccountId) {

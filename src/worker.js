@@ -71,11 +71,10 @@ async function startHost(port, pKey) {
 
 
     try {
-      const userCheckResponse = await Apis.instance().db_api().exec('get_accounts', [[name], false]);
-      console.log('userCheck:', userCheckResponse);
-      if (userCheckResponse.length) {
-        const [userCheck] = userCheckResponse;
-        if (userCheck.id) {
+      const userExistResponse = await Apis.instance().db_api().exec('get_account_by_name', [name]);
+      console.log('userExistResponse:', userExistResponse);
+      if (userExistResponse) {
+        if (userExistResponse.id) {
           res.status(400);
           res.send(JSON.stringify({
             result: 'This name is already registered'
@@ -112,6 +111,7 @@ async function startHost(port, pKey) {
       const result = await userRegistration(regData);
       if (result) {
         const id = result[0].trx.operation_results[0][1];
+        console.log(result[0].trx.operation_results[0]);
 
         if (email) {
           subscriber.subscribe(id, email);

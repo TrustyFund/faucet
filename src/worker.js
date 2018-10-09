@@ -69,13 +69,23 @@ async function startHost(port, pKey) {
       return;
     }
 
-    const userCheck = await Apis.instance().db_api().exec('get_full_accounts', [[name], false]);
-    if (userCheck && userCheck[0]) {
-      res.status(400);
-      res.send(JSON.stringify({
-        result: 'This name is already registered'
-      }));
-      return;
+
+    try {
+      const userCheckResponse = await Apis.instance().db_api().exec('get_accounts', [[name], false]);
+      console.log('userCheck:', userCheckResponse);
+      if (userCheckResponse.length) {
+        const [userCheck] = userCheckResponse;
+        if (userCheck.id) {
+          res.status(400);
+          res.send(JSON.stringify({
+            result: 'This name is already registered'
+          }));
+          return;
+        }
+      }
+    } catch (error) {
+      console.log('find error: ', error);
+      console.log('but it\'s fine');
     }
 
     if (ipTime[req.connection.remoteAddress]) {
@@ -127,8 +137,7 @@ async function startHost(port, pKey) {
     }
   });
 
-  host.listen(port, '0.0.0.0', () => {
-    console.log("... port %d in %s mode", port, host.settings.env);
+  host.listen(port, () => {
     console.log('host is up');
   });
 }

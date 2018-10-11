@@ -3,8 +3,14 @@ const { TransactionBuilder } = require('bitsharesjs');
 async function userRegistration(regData) {
   const { name, activeKey, ownerKey, registarUserId, referrerUserId, referrerPercent, pKey } = regData;
   const memoKey = activeKey;
+  try {
 
+  
   const transaction = new TransactionBuilder();
+  
+  console.log('wer wer');
+  console.log(ownerKey);
+  console.log(activeKey);
 
   transaction.add_type_operation('account_create', {
     registrar: registarUserId,
@@ -32,14 +38,22 @@ async function userRegistration(regData) {
       extensions: []
     },
     extensions: {},
-    prefix: 'BTS'
+    prefix: 'GPH'
   });
-
+  
   await transaction.set_required_fees();
   await transaction.add_signer(pKey, pKey.toPublicKey().toPublicKeyString());
-  const result = await transaction.broadcast();
+  let result;
+  try {
+    result = await transaction.broadcast();
+  } catch (error) {
+    console.log(error);
+  }
   console.log('creation result: ', result);
   return result;
+  } catch (error) {
+    console.log(error)
+  }
 }
 
 module.exports = {

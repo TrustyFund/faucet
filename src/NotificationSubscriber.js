@@ -46,7 +46,7 @@ class MoneySender {
       });
 
       transaction.set_required_fees().then(() => {
-        transaction.add_signer(this.pKey, this.pKey.toPublicKey().toPublicKeyString());
+        transaction.add_signer(this.pKey, this.pKey.toPublicKey().toPublicKeyString('BTS'));
         console.log('serialized transaction:', JSON.stringify(transaction.serialize()));
         transaction.broadcast(() => {
           console.log('transaction done');

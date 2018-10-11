@@ -35,6 +35,7 @@ async function startHost(port, pKey) {
 
   host.post('/signup', async (req, res) => {
     const { name, active_key, owner_key, email } = req.body;
+    console.log(name)
     res.setHeader('Access-Control-Allow-Origin', '*');
 
     if (!name || !active_key || !owner_key) {
@@ -71,7 +72,8 @@ async function startHost(port, pKey) {
 
 
     try {
-      const userCheckResponse = await Apis.instance().db_api().exec('get_accounts', [[name], false]);
+      const userCheckResponse = await Apis.instance().db_api().exec('get_full_accounts', [[name], false]);
+      // await Apis.instance().db_api().exec('get_full_accounts', [[nameOrId], false]);
       console.log('userCheck:', userCheckResponse);
       if (userCheckResponse.length) {
         const [userCheck] = userCheckResponse;
@@ -84,7 +86,7 @@ async function startHost(port, pKey) {
         }
       }
     } catch (error) {
-      console.log('find error: ', error);
+      console.log('user not found: ', error);
       console.log('but it\'s fine');
     }
 

@@ -28,7 +28,10 @@ function clearAddressesTimeout() {
 async function startHost(port, pKey) {
   setInterval(clearAddressesTimeout, config.clearRegisrationInMinutes * 60 * 1000);
 
-  const subscriber = new NotificationSubscriber(pKey, config.serviceUserMemoKey, config.registarUserId, config.notiferUserId);
+  let subscriber;
+  if (config.notiferUserId) {
+    subscriber = new NotificationSubscriber(pKey, config.serviceUserMemoKey, config.registarUserId, config.notiferUserId);
+  }
 
   const host = express();
   host.use(bodyParser.urlencoded({ extended: true }));
@@ -113,7 +116,7 @@ async function startHost(port, pKey) {
       if (result) {
         const id = result[0].trx.operation_results[0][1];
 
-        if (email) {
+        if (email && subscriber) {
           subscriber.subscribe(id, email);
         }
 

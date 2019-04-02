@@ -2,14 +2,15 @@ const config = require('../config');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { userRegistration } = require('./AccountCreator');
-const { key } = require('bitsharesjs');
+const { key, PrivateKey } = require('bitsharesjs');
 const NotificationSubscriber = require('./NotificationSubscriber');
 const { isNameValid, isCheapName } = require('./NameValidator');
 const { Apis } = require('bitsharesjs-ws');
 
+
 function getPrivateKey(brainkey) {
   const normalizedBrainkey = key.normalize_brainKey(brainkey);
-  const pKey = key.get_brainPrivateKey(normalizedBrainkey, 1);
+  const pKey = key.get_brainPrivateKey(normalizedBrainkey);
   return pKey;
 }
 
@@ -145,10 +146,10 @@ async function startHost(port, pKey) {
   });
 }
 
-
 async function processWork() {
   console.log('worker is up');
-  const pKey = getPrivateKey(config.serviceUserBrainkey);
+
+  const pKey = PrivateKey.fromWif(config.serviceUserPrivateKey);
   startHost(config.defaultPort, pKey);
 }
 

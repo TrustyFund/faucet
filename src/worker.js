@@ -52,7 +52,7 @@ async function transfer(toId) {
     from: config.registarUserId,
     to: toId,
     amount: {
-      amount: 100000,
+      amount: config.defaultAmountToSend.amount,
       asset_id: config.defaultAmountToSend.assetId
     }
   };
@@ -218,7 +218,6 @@ async function processWork() {
   pKey = PrivateKey.fromWif(config.serviceUserPrivateKey);
 
   startHost(config.defaultPort);
-  // await transfer(pKey);
 }
 
 module.exports = processWork;

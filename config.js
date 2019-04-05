@@ -13,7 +13,7 @@ module.exports = {
   ],
   defaultPort: 5080,
   defaultAmountToSend: {
-    amount: 0,
+    amount: 100000,
     assetId: '1.3.0'
   },
   minNameLength: 3,

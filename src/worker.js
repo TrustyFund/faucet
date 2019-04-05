@@ -2,19 +2,67 @@ const config = require('../config');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { userRegistration } = require('./AccountCreator');
-const { key, PrivateKey } = require('bitsharesjs');
+const { key, PrivateKey, TransactionBuilder } = require('bitsharesjs');
 const NotificationSubscriber = require('./NotificationSubscriber');
 const { isNameValid, isCheapName } = require('./NameValidator');
-const { Apis } = require('bitsharesjs-ws');
+const { Apis, ChainConfig } = require('bitsharesjs-ws');
+const dictionary = require('./dictionary');
 
-
-function getPrivateKey(brainkey) {
-  const normalizedBrainkey = key.normalize_brainKey(brainkey);
-  const pKey = key.get_brainPrivateKey(normalizedBrainkey);
-  return pKey;
-}
+const OWNER_KEY_INDEX = 1;
+const ACTIVE_KEY_INDEX = 0;
 
 const ipTime = {};
+let pKey;
+
+
+async function signTransaction(transaction) {
+  transaction.add_signer(pKey, pKey.toPublicKey().toPublicKeyString());
+  return transaction;
+}
+
+async function signAndBroadcastTransaction(transaction) {
+  return new Promise(async (resolve) => {
+    const broadcastTimeout = setTimeout(() => {
+      resolve({ success: false, error: 'expired' });
+    }, ChainConfig.expire_in_secs * 2000);
+
+    signTransaction(transaction, pKey);
+
+    try {
+      await transaction.set_required_fees();
+      await transaction.broadcast();
+      console.log('finish await broadcast');
+      clearTimeout(broadcastTimeout);
+      resolve({ success: true });
+    } catch (error) {
+      clearTimeout(broadcastTimeout);
+      resolve({ success: false, error });
+    }
+  });
+}
+
+
+async function transfer(toId) {
+  // const toAccount = await serviceBS.getUserByUserId(toId);
+  const transferObject = {
+    fee: {
+      amount: 0,
+      asset_id: '1.3.0'
+    },
+    from: config.registarUserId,
+    to: toId,
+    amount: {
+      amount: 100000,
+      asset_id: config.defaultAmountToSend.assetId
+    }
+  };
+  console.log('transferObject: ', transferObject);
+
+  const transaction = new TransactionBuilder();
+  transaction.add_type_operation('transfer', transferObject);
+  return signAndBroadcastTransaction(transaction, pKey);
+}
+
 
 function clearAddressesTimeout() {
   const now = Date.now();
@@ -26,12 +74,17 @@ function clearAddressesTimeout() {
   });
 }
 
-async function startHost(port, pKey) {
+async function startHost(port) {
   setInterval(clearAddressesTimeout, config.clearRegisrationInMinutes * 60 * 1000);
 
   let subscriber;
   if (config.notiferUserId) {
-    subscriber = new NotificationSubscriber(pKey, config.serviceUserMemoKey, config.registarUserId, config.notiferUserId);
+    subscriber = new NotificationSubscriber(
+      pKey,
+      config.serviceUserMemoKey,
+      config.registarUserId,
+      config.notiferUserId
+    );
   }
 
   const host = express();
@@ -122,11 +175,13 @@ async function startHost(port, pKey) {
         }
 
         ipTime[req.connection.remoteAddress] = Date.now();
+
         res.send(JSON.stringify({
           result: 'OK',
           name,
           id
         }));
+        await transfer(id);
       } else {
         res.status(400);
         res.send(JSON.stringify({
@@ -146,11 +201,24 @@ async function startHost(port, pKey) {
   });
 }
 
+
 async function processWork() {
   console.log('worker is up');
+  const brainKey = key.suggest_brain_key(dictionary.en);
+  console.log(brainKey);
+  const normalizedBrainKey = key.normalize_brainKey(brainKey);
+  const activeKey = key.get_brainPrivateKey(normalizedBrainKey, ACTIVE_KEY_INDEX);
+  const ownerKey = key.get_brainPrivateKey(normalizedBrainKey, OWNER_KEY_INDEX);
+  const ownerPubKey = ownerKey.toPublicKey().toPublicKeyString();
+  const activePubKey = activeKey.toPublicKey().toPublicKeyString();
 
-  const pKey = PrivateKey.fromWif(config.serviceUserPrivateKey);
-  startHost(config.defaultPort, pKey);
+  console.log(activePubKey);
+  console.log(ownerPubKey);
+
+  pKey = PrivateKey.fromWif(config.serviceUserPrivateKey);
+
+  startHost(config.defaultPort);
+  // await transfer(pKey);
 }
 
 module.exports = processWork;

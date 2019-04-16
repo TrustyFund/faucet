@@ -2,67 +2,18 @@ const config = require('../config');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { userRegistration } = require('./AccountCreator');
-const { key, PrivateKey, TransactionBuilder } = require('bitsharesjs');
+const { key } = require('bitsharesjs');
 const NotificationSubscriber = require('./NotificationSubscriber');
 const { isNameValid, isCheapName } = require('./NameValidator');
-const { Apis, ChainConfig } = require('bitsharesjs-ws');
-const dictionary = require('./dictionary');
+const { Apis } = require('bitsharesjs-ws');
 
-const OWNER_KEY_INDEX = 1;
-const ACTIVE_KEY_INDEX = 0;
+function getPrivateKey(brainkey) {
+  const normalizedBrainkey = key.normalize_brainKey(brainkey);
+  const pKey = key.get_brainPrivateKey(normalizedBrainkey, 1);
+  return pKey;
+}
 
 const ipTime = {};
-let pKey;
-
-
-async function signTransaction(transaction) {
-  transaction.add_signer(pKey, pKey.toPublicKey().toPublicKeyString());
-  return transaction;
-}
-
-async function signAndBroadcastTransaction(transaction) {
-  return new Promise(async (resolve) => {
-    const broadcastTimeout = setTimeout(() => {
-      resolve({ success: false, error: 'expired' });
-    }, ChainConfig.expire_in_secs * 2000);
-
-    signTransaction(transaction, pKey);
-
-    try {
-      await transaction.set_required_fees();
-      await transaction.broadcast();
-      console.log('finish await broadcast');
-      clearTimeout(broadcastTimeout);
-      resolve({ success: true });
-    } catch (error) {
-      clearTimeout(broadcastTimeout);
-      resolve({ success: false, error });
-    }
-  });
-}
-
-
-async function transfer(toId) {
-  // const toAccount = await serviceBS.getUserByUserId(toId);
-  const transferObject = {
-    fee: {
-      amount: 0,
-      asset_id: '1.3.0'
-    },
-    from: config.registarUserId,
-    to: toId,
-    amount: {
-      amount: config.defaultAmountToSend.amount,
-      asset_id: config.defaultAmountToSend.assetId
-    }
-  };
-  console.log('transferObject: ', transferObject);
-
-  const transaction = new TransactionBuilder();
-  transaction.add_type_operation('transfer', transferObject);
-  return signAndBroadcastTransaction(transaction, pKey);
-}
-
 
 function clearAddressesTimeout() {
   const now = Date.now();
@@ -74,17 +25,12 @@ function clearAddressesTimeout() {
   });
 }
 
-async function startHost(port) {
+async function startHost(port, pKey) {
   setInterval(clearAddressesTimeout, config.clearRegisrationInMinutes * 60 * 1000);
 
   let subscriber;
   if (config.notiferUserId) {
-    subscriber = new NotificationSubscriber(
-      pKey,
-      config.serviceUserMemoKey,
-      config.registarUserId,
-      config.notiferUserId
-    );
+    subscriber = new NotificationSubscriber(pKey, config.serviceUserMemoKey, config.registarUserId, config.notiferUserId);
   }
 
   const host = express();
@@ -147,7 +93,7 @@ async function startHost(port) {
 
     if (ipTime[req.connection.remoteAddress]) {
       if (ipTime[req.connection.remoteAddress] >
-          Date.now() - (config.registrationDelayInMinutes * 60 * 1000)) {
+        Date.now() - (config.registrationDelayInMinutes * 60 * 1000)) {
         res.status(400);
         res.send(JSON.stringify({
           result: 'You cannot register a user more than once every ' +
@@ -175,13 +121,11 @@ async function startHost(port) {
         }
 
         ipTime[req.connection.remoteAddress] = Date.now();
-
         res.send(JSON.stringify({
           result: 'OK',
           name,
           id
         }));
-        await transfer(id);
       } else {
         res.status(400);
         res.send(JSON.stringify({
@@ -204,20 +148,8 @@ async function startHost(port) {
 
 async function processWork() {
   console.log('worker is up');
-  const brainKey = key.suggest_brain_key(dictionary.en);
-  console.log(brainKey);
-  const normalizedBrainKey = key.normalize_brainKey(brainKey);
-  const activeKey = key.get_brainPrivateKey(normalizedBrainKey, ACTIVE_KEY_INDEX);
-  const ownerKey = key.get_brainPrivateKey(normalizedBrainKey, OWNER_KEY_INDEX);
-  const ownerPubKey = ownerKey.toPublicKey().toPublicKeyString();
-  const activePubKey = activeKey.toPublicKey().toPublicKeyString();
-
-  console.log(activePubKey);
-  console.log(ownerPubKey);
-
-  pKey = PrivateKey.fromWif(config.serviceUserPrivateKey);
-
-  startHost(config.defaultPort);
+  const pKey = getPrivateKey(config.serviceUserBrainkey);
+  startHost(config.defaultPort, pKey);
 }
 
 module.exports = processWork;
